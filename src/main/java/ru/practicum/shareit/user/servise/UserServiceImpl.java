@@ -11,6 +11,7 @@ import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -107,8 +108,11 @@ public class UserServiceImpl implements UserService {
 
     private void checkEmailUnique(String email, Long currentUserId) {
         for (User user : userRepository.findAll()) {
-            boolean sameEmail = user.getEmail() != null && user.getEmail().equalsIgnoreCase(email);
-            boolean otherUser = currentUserId == null || user.getId() != currentUserId;
+            boolean sameEmail = user.getEmail() != null
+                    && user.getEmail().equalsIgnoreCase(email);
+
+            boolean otherUser = currentUserId == null
+                    || !Objects.equals(user.getId(), currentUserId);
 
             if (sameEmail && otherUser) {
                 throw new ConflictException("Email already exists: " + email);
