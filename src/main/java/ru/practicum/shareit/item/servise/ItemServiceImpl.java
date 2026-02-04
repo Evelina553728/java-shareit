@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.common.ForbiddenException;
 import ru.practicum.shareit.common.NotFoundException;
@@ -12,10 +13,12 @@ import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.util.List;
+import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class ItemServiceImpl implements ru.practicum.shareit.item.service.ItemService {
+public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -27,16 +30,21 @@ public class ItemServiceImpl implements ru.practicum.shareit.item.service.ItemSe
 
         Item item = ItemMapper.toModel(itemDto);
         item.setOwnerId(ownerId);
-        return ItemMapper.toDto(itemRepository.save(item));
+
+        Item saved = itemRepository.save(item);
+        log.debug("Created item id={}, ownerId={}", saved.getId(), ownerId);
+
+        return ItemMapper.toDto(saved);
     }
 
     @Override
     public ItemDto update(long ownerId, long itemId, ItemDto updateDto) {
         ensureUserExists(ownerId);
+
         Item existing = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item not found: " + itemId));
 
-        if (existing.getOwnerId() == null || existing.getOwnerId() != ownerId) {
+        if (!Objects.equals(existing.getOwnerId(), ownerId)) {
             throw new ForbiddenException("Only owner can update item: " + itemId);
         }
 
@@ -62,7 +70,10 @@ public class ItemServiceImpl implements ru.practicum.shareit.item.service.ItemSe
             existing.setRequestId(updateDto.getRequestId());
         }
 
-        return ItemMapper.toDto(itemRepository.update(existing));
+        Item updated = itemRepository.update(existing);
+        log.debug("Updated item id={}, ownerId={}", updated.getId(), ownerId);
+
+        return ItemMapper.toDto(updated);
     }
 
     @Override
@@ -84,10 +95,13 @@ public class ItemServiceImpl implements ru.practicum.shareit.item.service.ItemSe
     @Override
     public List<ItemDto> search(long requesterId, String text) {
         ensureUserExists(requesterId);
+
         if (text == null || text.isBlank()) {
             return List.of();
         }
-        return itemRepository.searchAvailableByText(text).stream()
+
+        return itemRepository.searchByText(text).stream()
+                .filter(i -> Boolean.TRUE.equals(i.getAvailable()))
                 .map(ItemMapper::toDto)
                 .toList();
     }

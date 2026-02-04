@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.common.ConflictException;
 import ru.practicum.shareit.common.NotFoundException;
@@ -13,6 +14,7 @@ import ru.practicum.shareit.user.storage.UserRepository;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -22,11 +24,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto create(UserDto userDto) {
         validateCreate(userDto);
-
         checkEmailUnique(userDto.getEmail(), null);
 
         User user = UserMapper.toModel(userDto);
-        return UserMapper.toDto(userRepository.save(user));
+        User saved = userRepository.save(user);
+
+        log.debug("Created user id={}, email={}", saved.getId(), saved.getEmail());
+        return UserMapper.toDto(saved);
     }
 
     @Override
@@ -51,13 +55,16 @@ public class UserServiceImpl implements UserService {
             }
             validateEmailFormat(updateDto.getEmail());
 
-            if (!updateDto.getEmail().equalsIgnoreCase(existing.getEmail())) {
+            if (existing.getEmail() == null || !updateDto.getEmail().equalsIgnoreCase(existing.getEmail())) {
                 checkEmailUnique(updateDto.getEmail(), userId);
             }
             existing.setEmail(updateDto.getEmail());
         }
 
-        return UserMapper.toDto(userRepository.update(existing));
+        User updated = userRepository.update(existing);
+
+        log.debug("Updated user id={}, email={}", updated.getId(), updated.getEmail());
+        return UserMapper.toDto(updated);
     }
 
     @Override
@@ -80,6 +87,7 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException("User not found: " + userId);
         }
         userRepository.deleteById(userId);
+        log.debug("Deleted user id={}", userId);
     }
 
     private void validateCreate(UserDto dto) {
@@ -108,11 +116,8 @@ public class UserServiceImpl implements UserService {
 
     private void checkEmailUnique(String email, Long currentUserId) {
         for (User user : userRepository.findAll()) {
-            boolean sameEmail = user.getEmail() != null
-                    && user.getEmail().equalsIgnoreCase(email);
-
-            boolean otherUser = currentUserId == null
-                    || !Objects.equals(user.getId(), currentUserId);
+            boolean sameEmail = user.getEmail() != null && user.getEmail().equalsIgnoreCase(email);
+            boolean otherUser = currentUserId == null || !Objects.equals(user.getId(), currentUserId);
 
             if (sameEmail && otherUser) {
                 throw new ConflictException("Email already exists: " + email);

@@ -6,6 +6,7 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -37,15 +38,15 @@ public class InMemoryItemRepository implements ItemRepository {
     @Override
     public List<Item> findAllByOwnerId(long ownerId) {
         return items.values().stream()
-                .filter(i -> i.getOwnerId() != null && i.getOwnerId() == ownerId)
+                .filter(i -> Objects.equals(i.getOwnerId(), ownerId))
                 .toList();
     }
 
     @Override
-    public List<Item> searchAvailableByText(String text) {
+    public List<Item> searchByText(String text) {
         String q = text == null ? "" : text.toLowerCase();
+
         return items.values().stream()
-                .filter(i -> Boolean.TRUE.equals(i.getAvailable()))
                 .filter(i -> containsIgnoreCase(i.getName(), q) || containsIgnoreCase(i.getDescription(), q))
                 .toList();
     }
