@@ -40,12 +40,16 @@ public class BookingServiceImpl implements BookingService {
         User booker = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
-        Item item = itemRepository.findByIdAndAvailableTrue(dto.getItemId())
-                .orElseThrow(() -> new NotFoundException("Item not found or not available: " + dto.getItemId()));
+        Item item = itemRepository.findById(dto.getItemId())
+                .orElseThrow(() -> new NotFoundException("Item not found: " + dto.getItemId()));
 
         if (item.getOwner() != null && item.getOwner().getId() != null
                 && item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Owner cannot book own item: " + item.getId());
+        }
+
+        if (!Boolean.TRUE.equals(item.getAvailable())) {
+            throw new ValidationException("Item is not available for booking: " + item.getId());
         }
 
         Booking booking = Booking.builder()
@@ -64,8 +68,6 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto approve(long ownerId, long bookingId, boolean approved) {
-        userRepository.findById(ownerId)
-                .orElseThrow(() -> new NotFoundException("User not found: " + ownerId));
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking not found: " + bookingId));
@@ -148,6 +150,12 @@ public class BookingServiceImpl implements BookingService {
         if (dto.getStart() == null || dto.getEnd() == null) {
             throw new ValidationException("start/end must not be null");
         }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (dto.getStart().isBefore(now) || dto.getEnd().isBefore(now)) {
+            throw new ValidationException("start/end must be in the future");
+        }
+
         if (!dto.getEnd().isAfter(dto.getStart())) {
             throw new ValidationException("end must be after start");
         }
