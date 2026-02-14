@@ -40,9 +40,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public ItemDto create(long ownerId, ItemDto itemDto) {
+        validateCreate(itemDto);
+
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("User not found: " + ownerId));
-        validateCreate(itemDto);
 
         Item item = ItemMapper.toModel(itemDto);
         item.setOwner(owner);
@@ -94,6 +95,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getById(long requesterId, long itemId) {
         ensureUserExists(requesterId);
+
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item not found: " + itemId));
 
@@ -112,6 +114,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> getAllByOwner(long ownerId) {
         ensureUserExists(ownerId);
+
         return itemRepository.findAllByOwnerId(ownerId).stream()
                 .map(ItemMapper::toDto)
                 .peek(dto -> {
@@ -143,6 +146,8 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("text must not be blank");
         }
 
+        log.debug("Add comment: userId={}, itemId={}", userId, itemId);
+
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found: " + userId));
         Item item = itemRepository.findById(itemId)
@@ -161,7 +166,10 @@ public class ItemServiceImpl implements ItemService {
                 .created(LocalDateTime.now())
                 .build();
 
-        return CommentMapper.toDto(commentRepository.save(comment));
+        Comment saved = commentRepository.save(comment);
+        log.debug("Comment created id={}, itemId={}, authorId={}", saved.getId(), itemId, userId);
+
+        return CommentMapper.toDto(saved);
     }
 
     private void ensureUserExists(long userId) {

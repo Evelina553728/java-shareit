@@ -11,7 +11,7 @@ public final class BookingMapper {
 
     public static BookingDto toDto(Booking booking) {
         if (booking == null) {
-            return null;
+            throw new IllegalArgumentException("booking must not be null");
         }
         return BookingDto.builder()
                 .id(booking.getId())
