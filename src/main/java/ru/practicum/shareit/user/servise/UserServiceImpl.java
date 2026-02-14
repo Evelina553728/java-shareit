@@ -12,7 +12,6 @@ import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -61,7 +60,7 @@ public class UserServiceImpl implements UserService {
             existing.setEmail(updateDto.getEmail());
         }
 
-        User updated = userRepository.update(existing);
+        User updated = userRepository.save(existing);
 
         log.debug("Updated user id={}, email={}", updated.getId(), updated.getEmail());
         return UserMapper.toDto(updated);
@@ -115,13 +114,10 @@ public class UserServiceImpl implements UserService {
     }
 
     private void checkEmailUnique(String email, Long currentUserId) {
-        for (User user : userRepository.findAll()) {
-            boolean sameEmail = user.getEmail() != null && user.getEmail().equalsIgnoreCase(email);
-            boolean otherUser = currentUserId == null || !Objects.equals(user.getId(), currentUserId);
-
-            if (sameEmail && otherUser) {
-                throw new ConflictException("Email already exists: " + email);
-            }
-        }
+        userRepository.findByEmailIgnoreCase(email)
+                .filter(u -> currentUserId == null || !u.getId().equals(currentUserId))
+                .ifPresent(u -> {
+                    throw new ConflictException("Email already exists: " + email);
+                });
     }
 }
