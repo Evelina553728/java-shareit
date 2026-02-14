@@ -68,14 +68,11 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto approve(long ownerId, long bookingId, boolean approved) {
-        userRepository.findById(ownerId)
-                .orElseThrow(() -> new NotFoundException("User not found: " + ownerId));
-
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking not found: " + bookingId));
 
-        long realOwnerId = booking.getItem().getOwner().getId();
-        if (realOwnerId != ownerId) {
+        Long realOwnerId = booking.getItem().getOwner().getId();
+        if (!realOwnerId.equals(ownerId)) {
             throw new ForbiddenException("Only owner can approve booking: " + bookingId);
         }
 
