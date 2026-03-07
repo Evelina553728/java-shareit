@@ -3,7 +3,6 @@ version: '3.8'
 services:
   db:
     image: postgres:16.1
-    container_name: postgres
     ports:
       - "5432:5432"
     environment:
@@ -18,7 +17,6 @@ services:
 
   server:
     build: ./server
-    container_name: shareit-server
     ports:
       - "9090:9090"
     depends_on:
@@ -31,7 +29,6 @@ services:
 
   gateway:
     build: ./gateway
-    container_name: shareit-gateway
     ports:
       - "8080:8080"
     depends_on:
