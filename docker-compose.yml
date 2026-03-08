@@ -15,19 +15,21 @@ services:
 
   server:
     build: ./server
-    network_mode: host
+    ports:
+      - "9090:9090"
     depends_on:
       db:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/shareit
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/shareit
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
 
   gateway:
     build: ./gateway
-    network_mode: host
+    ports:
+      - "8080:8080"
     depends_on:
       - server
     environment:
-      SHAREIT_SERVER_URL: http://localhost:9090
+      SHAREIT_SERVER_URL: http://server:9090
