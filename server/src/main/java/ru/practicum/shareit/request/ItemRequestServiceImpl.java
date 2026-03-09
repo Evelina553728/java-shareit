@@ -31,7 +31,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     @Transactional
-    public ru.practicum.shareit.request.dto.ItemRequestDto create(long userId, ItemRequestCreateDto dto) {
+    public ItemRequestDto create(long userId, ItemRequestCreateDto dto) {
         ensureUserExists(userId);
         if (dto == null || dto.getDescription() == null || dto.getDescription().isBlank()) {
             throw new ValidationException("description must not be blank");
@@ -44,7 +44,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                 .build());
         log.debug("Created request id={}, userId={}", saved.getId(), userId);
 
-        return ru.practicum.shareit.request.dto.ItemRequestDto.builder()
+        return ItemRequestDto.builder()
                 .id(saved.getId())
                 .description(saved.getDescription())
                 .created(saved.getCreated())
@@ -53,13 +53,13 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    public List<ru.practicum.shareit.request.dto.ItemRequestDto> getOwn(long userId) {
+    public List<ItemRequestDto> getOwn(long userId) {
         ensureUserExists(userId);
         return attachItems(requestRepository.findAllByRequestorIdOrderByCreatedDesc(userId));
     }
 
     @Override
-    public List<ru.practicum.shareit.request.dto.ItemRequestDto> getOthers(long userId, int from, int size) {
+    public List<ItemRequestDto> getOthers(long userId, int from, int size) {
         ensureUserExists(userId);
         if (from < 0 || size <= 0) {
             throw new ValidationException("from must be >= 0 and size must be > 0");
@@ -69,16 +69,16 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    public ru.practicum.shareit.request.dto.ItemRequestDto getById(long userId, long requestId) {
+    public ItemRequestDto getById(long userId, long requestId) {
         ensureUserExists(userId);
         ItemRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Request not found: " + requestId));
 
-        List<ru.practicum.shareit.request.dto.ItemRequestItemDto> items = itemRepository.findAllByRequestId(requestId).stream()
+        List<ItemRequestItemDto> items = itemRepository.findAllByRequestId(requestId).stream()
                 .map(this::toRequestItemDto)
                 .toList();
 
-        return ru.practicum.shareit.request.dto.ItemRequestDto.builder()
+        return ItemRequestDto.builder()
                 .id(request.getId())
                 .description(request.getDescription())
                 .created(request.getCreated())
@@ -92,14 +92,20 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         }
     }
 
-    private List<ru.practicum.shareit.request.dto.ItemRequestDto> attachItems(List<ItemRequest> requests) {
+    private List<ItemRequestDto> attachItems(List<ItemRequest> requests) {
         if (requests.isEmpty()) {
             return List.of();
         }
-        List<Long> requestIds = requests.stream().map(ItemRequest::getId).toList();
-        Map<Long, List<ru.practicum.shareit.request.dto.ItemRequestItemDto>> itemsByRequest = itemRepository.findAllByRequestIdIn(requestIds).stream()
-                .collect(Collectors.groupingBy(Item::getRequestId,
-                        Collectors.mapping(this::toRequestItemDto, Collectors.toList())));
+
+        List<Long> requestIds = requests.stream()
+                .map(ItemRequest::getId)
+                .toList();
+
+        Map<Long, List<ItemRequestItemDto>> itemsByRequest = itemRepository.findAllByRequestIdIn(requestIds).stream()
+                .collect(Collectors.groupingBy(
+                        Item::getRequestId,
+                        Collectors.mapping(this::toRequestItemDto, Collectors.toList())
+                ));
 
         return requests.stream()
                 .map(r -> ItemRequestDto.builder()
@@ -111,7 +117,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                 .toList();
     }
 
-    private ru.practicum.shareit.request.dto.ItemRequestItemDto toRequestItemDto(Item item) {
+    private ItemRequestItemDto toRequestItemDto(Item item) {
         return ItemRequestItemDto.builder()
                 .id(item.getId())
                 .name(item.getName())
