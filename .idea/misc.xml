@@ -5,15 +5,8 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/pom.xml" />
-        <option value="$PROJECT_DIR$/common [shareit-common]/pom.xml" />
-        <option value="$PROJECT_DIR$/gateway [shareit-gateway]/pom.xml" />
-        <option value="$PROJECT_DIR$/server [shareit-server]/pom.xml" />
-        <option value="$PROJECT_DIR$/shareit-common/pom.xml" />
-        <option value="$PROJECT_DIR$/shareit-gateway/pom.xml" />
-        <option value="$PROJECT_DIR$/shareit-server/pom.xml" />
-        <option value="$PROJECT_DIR$/java-shareit/pom.xml" />
       </list>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_22" default="true" project-jdk-name="22" project-jdk-type="JavaSDK" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_21" project-jdk-name="22" project-jdk-type="JavaSDK" />
 </project>

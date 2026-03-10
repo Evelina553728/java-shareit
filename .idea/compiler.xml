@@ -23,6 +23,7 @@
       <module name="gateway" options="-parameters" />
       <module name="java-shareit" options="-parameters" />
       <module name="server" options="-parameters" />
+      <module name="shareit" options="" />
       <module name="shareit-gateway" options="-parameters" />
       <module name="shareit-server" options="-parameters" />
     </option>
