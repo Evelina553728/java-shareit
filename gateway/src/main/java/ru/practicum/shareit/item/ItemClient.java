@@ -22,10 +22,27 @@ public class ItemClient extends BaseClient {
                 .build());
     }
 
-    public ResponseEntity<Object> create(long userId, ItemDto itemDto) { return post("", userId, itemDto); }
-    public ResponseEntity<Object> update(long userId, long itemId, ItemDto itemDto) { return patch("/" + itemId, userId, itemDto); }
-    public ResponseEntity<Object> getById(long userId, long itemId) { return get("/" + itemId, userId); }
-    public ResponseEntity<Object> getAllByOwner(long userId) { return get("", userId); }
-    public ResponseEntity<Object> search(long userId, String text) { return get("/search?text=" + text, userId); }
-    public ResponseEntity<Object> addComment(long userId, long itemId, CommentDto dto) { return post("/" + itemId + "/comment", userId, dto); }
+    public ResponseEntity<Object> create(long userId, ItemDto itemDto) {
+        return post("", userId, itemDto);
+    }
+
+    public ResponseEntity<Object> update(long userId, long itemId, ItemDto itemDto) {
+        return patch("/" + itemId, userId, itemDto);
+    }
+
+    public ResponseEntity<Object> getById(long userId, long itemId) {
+        return get("/" + itemId, userId);
+    }
+
+    public ResponseEntity<Object> getAllByOwner(long userId) {
+        return get("", userId);
+    }
+
+    public ResponseEntity<Object> search(long userId, String text) {
+        return get("/search?text=" + text, userId);
+    }
+
+    public ResponseEntity<Object> addComment(long userId, long itemId, CommentDto dto) {
+        return post("/" + itemId + "/comment", userId, dto);
+    }
 }
