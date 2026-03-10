@@ -3,8 +3,8 @@ package ru.practicum.shareit.booking.storage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.model.BookingStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,11 +44,18 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     Optional<Booking> findById(Long id);
 
-    @Query("select b from Booking b where b.item.id = :itemId and b.status = 'APPROVED' and b.start < :now order by b.start desc")
-    List<Booking> findLastApproved(@Param("itemId") long itemId, @Param("now") LocalDateTime now);
+    @Query("select b from Booking b where b.item.id = :itemId and b.status = :status and b.start < :now order by b.start desc")
+    List<Booking> findLastApproved(@Param("itemId") long itemId,
+                                   @Param("status") BookingStatus status,
+                                   @Param("now") LocalDateTime now);
 
-    @Query("select b from Booking b where b.item.id = :itemId and b.status = 'APPROVED' and b.start > :now order by b.start asc")
-    List<Booking> findNextApproved(@Param("itemId") long itemId, @Param("now") LocalDateTime now);
+    @Query("select b from Booking b where b.item.id = :itemId and b.status = :status and b.start > :now order by b.start asc")
+    List<Booking> findNextApproved(@Param("itemId") long itemId,
+                                   @Param("status") BookingStatus status,
+                                   @Param("now") LocalDateTime now);
 
-    boolean existsByItem_IdAndBooker_IdAndStatusAndEndBefore(long itemId, long bookerId, BookingStatus status, LocalDateTime time);
+    boolean existsByItem_IdAndBooker_IdAndStatusAndEndBefore(long itemId,
+                                                             long bookerId,
+                                                             BookingStatus status,
+                                                             LocalDateTime time);
 }

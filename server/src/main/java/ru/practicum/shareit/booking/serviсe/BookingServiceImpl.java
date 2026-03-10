@@ -4,12 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingState;
-import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.common.ForbiddenException;
 import ru.practicum.shareit.common.NotFoundException;
@@ -43,7 +43,8 @@ public class BookingServiceImpl implements BookingService {
         Item item = itemRepository.findById(dto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Item not found: " + dto.getItemId()));
 
-        if (item.getOwner() != null && item.getOwner().getId() != null
+        if (item.getOwner() != null
+                && item.getOwner().getId() != null
                 && item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Owner cannot book own item: " + item.getId());
         }
@@ -68,7 +69,6 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto approve(long ownerId, long bookingId, boolean approved) {
-
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking not found: " + bookingId));
 
@@ -97,6 +97,7 @@ public class BookingServiceImpl implements BookingService {
 
         boolean isBooker = booking.getBooker().getId().equals(userId);
         boolean isOwner = booking.getItem().getOwner().getId().equals(userId);
+
         if (!isBooker && !isOwner) {
             throw new ForbiddenException("Access denied to booking: " + bookingId);
         }
@@ -119,7 +120,9 @@ public class BookingServiceImpl implements BookingService {
             case REJECTED -> bookingRepository.findByBookerAndStatus(userId, BookingStatus.REJECTED);
         };
 
-        return bookings.stream().map(BookingMapper::toDto).toList();
+        return bookings.stream()
+                .map(BookingMapper::toDto)
+                .toList();
     }
 
     @Override
@@ -137,7 +140,9 @@ public class BookingServiceImpl implements BookingService {
             case REJECTED -> bookingRepository.findByOwnerAndStatus(ownerId, BookingStatus.REJECTED);
         };
 
-        return bookings.stream().map(BookingMapper::toDto).toList();
+        return bookings.stream()
+                .map(BookingMapper::toDto)
+                .toList();
     }
 
     private void validateCreate(BookingCreateDto dto) {

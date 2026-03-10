@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.common.ForbiddenException;
 import ru.practicum.shareit.common.NotFoundException;
@@ -210,7 +210,6 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-
     private void validateRequestId(Long requestId) {
         if (requestId != null && !requestRepository.existsById(requestId)) {
             throw new NotFoundException("Request not found: " + requestId);
@@ -225,8 +224,12 @@ public class ItemServiceImpl implements ItemService {
 
     private void ensureUserHasCompletedBooking(long userId, long itemId) {
         boolean hasBooking = bookingRepository.existsByItem_IdAndBooker_IdAndStatusAndEndBefore(
-                itemId, userId, BookingStatus.APPROVED, LocalDateTime.now()
+                itemId,
+                userId,
+                BookingStatus.APPROVED,
+                LocalDateTime.now()
         );
+
         if (!hasBooking) {
             throw new ValidationException("User has not completed booking for item: " + itemId);
         }
@@ -244,8 +247,15 @@ public class ItemServiceImpl implements ItemService {
     private void enrichWithBookings(ItemDto dto, long itemId) {
         LocalDateTime now = LocalDateTime.now();
 
-        Booking last = bookingRepository.findLastApproved(itemId, now).stream().findFirst().orElse(null);
-        Booking next = bookingRepository.findNextApproved(itemId, now).stream().findFirst().orElse(null);
+        Booking last = bookingRepository.findLastApproved(itemId, BookingStatus.APPROVED, now)
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        Booking next = bookingRepository.findNextApproved(itemId, BookingStatus.APPROVED, now)
+                .stream()
+                .findFirst()
+                .orElse(null);
 
         dto.setLastBooking(BookingMapper.toShortDto(last));
         dto.setNextBooking(BookingMapper.toShortDto(next));
